@@ -40,14 +40,10 @@ public class ZkSerializerFactory {
         switch (serializeEnum) {
             case KRYO:
                 return new KryoSerializer();
-            case JDK:
-                return new JavaSerializer();
             case HESSIAN:
                 return new HessianSerializer();
             case PROTOSTUFF:
                 return new ProtostuffSerializer();
-            case FAST_JSON:
-                return new FastJsonSerializer();
             default:
                 return new JavaSerializer();
         }

@@ -23,50 +23,38 @@ import org.I0Itec.zkclient.serialize.ZkSerializer;
 import org.dromara.soul.configuration.zookeeper.serializer.ZkSerializerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.SearchStrategy;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * ZookeeperConfiguration .
  *
  * @author xiaoyu(Myth)
  */
-@Configuration
+@EnableConfigurationProperties(ZookeeperConfig.class)
 public class ZookeeperConfiguration {
-
-    /**
-     * Zookeeper config zookeeper config.
-     *
-     * @return the zookeeper config
-     */
-    @Bean
-    @ConfigurationProperties(prefix = "spring.zookeeper")
-    public ZookeeperConfig zookeeperConfig() {
-        return new ZookeeperConfig();
-    }
 
     /**
      * Zk serializer zk serializer.
      *
-     * @param zookeeperConfig the zookeeper config
+     * @param zookeeperConfig the zookeeper configuration
      * @return the zk serializer
      */
     @Bean
     @ConditionalOnMissingBean(value = ZkSerializer.class, search = SearchStrategy.ALL)
-    public ZkSerializer zkSerializer(ZookeeperConfig zookeeperConfig) {
+    public ZkSerializer zkSerializer(final ZookeeperConfig zookeeperConfig) {
         return ZkSerializerFactory.of(zookeeperConfig.getSerializer());
     }
 
     /**
      * register zkClient in spring ioc.
      *
-     * @param zookeeperConfig the zookeeper config
+     * @param zookeeperConfig the zookeeper configuration
      * @param zkSerializer    the zk serializer
      * @return ZkClient {@linkplain ZkClient}
      */
     @Bean
-    public ZkClient zkClient(ZookeeperConfig zookeeperConfig, ZkSerializer zkSerializer) {
+    public ZkClient zkClient(final ZookeeperConfig zookeeperConfig, final ZkSerializer zkSerializer) {
         return new ZkClient(zookeeperConfig.getUrl(),
                 zookeeperConfig.getSessionTimeout(),
                 zookeeperConfig.getConnectionTimeout(),

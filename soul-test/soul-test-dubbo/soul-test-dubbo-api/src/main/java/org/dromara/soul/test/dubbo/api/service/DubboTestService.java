@@ -18,9 +18,11 @@
 
 package org.dromara.soul.test.dubbo.api.service;
 
-import org.dromara.soul.test.dubbo.api.entity.DubboTest;
-
 import java.util.List;
+import java.util.Map;
+
+import org.dromara.soul.test.dubbo.api.entity.ComplexBeanTest;
+import org.dromara.soul.test.dubbo.api.entity.DubboTest;
 
 /**
  * DubboTestService.
@@ -39,6 +41,22 @@ public interface DubboTestService {
 
 
     /**
+     * Find all dubbo test.
+     *
+     * @return the dubbo test
+     */
+    DubboTest findAll();
+
+    /**
+     * Find by long dubbo test.
+     *
+     * @param id the id
+     * @return the dubbo test
+     */
+    String findByLong(Long id);
+
+
+    /**
      * Insert dubbo test.
      *
      * @param dubboTest the dubbo test
@@ -46,62 +64,69 @@ public interface DubboTestService {
      */
     DubboTest insert(DubboTest dubboTest);
 
+    /**
+     * find by Double dubbo test
+     *
+     * @param id
+     * @return
+     */
+
+    String findByDouble(Double id);
 
     /**
-     * Insert 3 dubbo test.
+     * query dubbo by array
      *
-     * @param dubboTest the dubbo test
-     * @param id        the id
-     * @param name      the name
-     * @return the dubbo test
+     * @param ids
+     * @return
      */
-    DubboTest insert3(DubboTest dubboTest, String id, String name);
+    String queryByArray(Integer[] ids);
 
     /**
-     * findByIdAndName.
+     * query by String Array dubbo test
      *
-     * @param id   id
-     * @param name name
-     * @return DubboTest dubbo test
+     * @param ids
+     * @return
      */
-    DubboTest findByIdAndName(String id, String name);
-
+    String queryByStringArray(String[] ids);
 
     /**
-     * Test entity string list param dubbo test.
+     * query by list dubbo test
      *
-     * @param dubboTest the dubbo test
-     * @param id        the id
-     * @param ids       the ids
-     * @return the dubbo test
+     * @param ids
+     * @return
      */
-    DubboTest testEntityStringListParam(DubboTest dubboTest, String id, List<String> ids);
+    String queryByList(List<Integer> ids);
 
     /**
-     * Test entity string param dubbo test.
+     * query by complex list dubbo test
      *
-     * @param dubboTest the dubbo test
-     * @param id        the id
-     * @param name      the name
-     * @return the dubbo test
+     * @param complexBeanTests
+     * @return
      */
-    DubboTest testEntityStringParam(DubboTest dubboTest, String id, Integer name);
+    String queryByComplexList(List<ComplexBeanTest> complexBeanTests);
 
     /**
-     * Test multi entity dubbo test.
+     * query by map dubbo test
      *
-     * @param test1 the test 1
-     * @param test2 the test 2
-     * @return the dubbo test
+     * @param ids
+     * @return
      */
-    DubboTest testMultiEntity(DubboTest test1, DubboTest test2);
+    String queryByMap(Map<String, String> ids);
 
     /**
-     * Test list entity dubbo test.
+     * query by complex map dubbo test
      *
-     * @param dubboTestList the dubbo test list
-     * @return the dubbo test
+     * @param complexBeanTestMap
+     * @return
      */
-    DubboTest testListEntity(List<DubboTest> dubboTestList);
+    String queryByComplexMap(Map<String, ComplexBeanTest> complexBeanTestMap);
+
+    /**
+     * insert complex data dubbo test
+     *
+     * @return
+     */
+    String insertComplexData(ComplexBeanTest complexBeanTest);
+
 
 }

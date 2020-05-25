@@ -20,21 +20,24 @@ package org.dromara.soul.web.plugin.function;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.dromara.soul.common.constant.Constants;
+import org.dromara.soul.common.dto.RuleData;
+import org.dromara.soul.common.dto.SelectorData;
 import org.dromara.soul.common.dto.convert.DivideUpstream;
 import org.dromara.soul.common.dto.convert.rule.DivideRuleHandle;
-import org.dromara.soul.common.dto.zk.RuleZkDTO;
-import org.dromara.soul.common.dto.zk.SelectorZkDTO;
 import org.dromara.soul.common.enums.PluginEnum;
 import org.dromara.soul.common.enums.PluginTypeEnum;
 import org.dromara.soul.common.enums.RpcTypeEnum;
 import org.dromara.soul.common.utils.GsonUtils;
 import org.dromara.soul.common.utils.LogUtils;
 import org.dromara.soul.web.balance.utils.LoadBalanceUtils;
+import org.dromara.soul.web.cache.LocalCacheManager;
 import org.dromara.soul.web.cache.UpstreamCacheManager;
-import org.dromara.soul.web.cache.ZookeeperCacheManager;
 import org.dromara.soul.web.plugin.AbstractSoulPlugin;
 import org.dromara.soul.web.plugin.SoulPluginChain;
 import org.dromara.soul.web.request.RequestDTO;
+import org.dromara.soul.web.result.SoulResultEnum;
+import org.dromara.soul.web.result.SoulResultUtils;
+import org.dromara.soul.web.result.SoulResultWarp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -53,7 +56,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -77,30 +79,30 @@ public class WebSocketPlugin extends AbstractSoulPlugin {
     private final WebSocketService webSocketService;
 
     /**
-     * Instantiates a new WebSocket plugin.
+     * Instantiates a new Web socket plugin.
      *
-     * @param zookeeperCacheManager the zookeeper cache manager
-     * @param upstreamCacheManager  the upstream cache manager
-     * @param webSocketClient       the web socket client
-     * @param webSocketService      the web socket service
+     * @param localCacheManager    the local cache manager
+     * @param upstreamCacheManager the upstream cache manager
+     * @param webSocketClient      the web socket client
+     * @param webSocketService     the web socket service
      */
-    public WebSocketPlugin(final ZookeeperCacheManager zookeeperCacheManager,
+    public WebSocketPlugin(final LocalCacheManager localCacheManager,
                            final UpstreamCacheManager upstreamCacheManager, final
                            WebSocketClient webSocketClient,
                            final WebSocketService webSocketService) {
-        super(zookeeperCacheManager);
+        super(localCacheManager);
         this.upstreamCacheManager = upstreamCacheManager;
         this.webSocketClient = webSocketClient;
         this.webSocketService = webSocketService;
     }
 
     @Override
-    protected Mono<Void> doExecute(final ServerWebExchange exchange, final SoulPluginChain chain, final SelectorZkDTO selector, final RuleZkDTO rule) {
+    protected Mono<Void> doExecute(final ServerWebExchange exchange, final SoulPluginChain chain, final SelectorData selector, final RuleData rule) {
         final List<DivideUpstream> upstreamList =
                 upstreamCacheManager.findUpstreamListBySelectorId(selector.getId());
         final RequestDTO requestDTO = exchange.getAttribute(Constants.REQUESTDTO);
         if (CollectionUtils.isEmpty(upstreamList) || Objects.isNull(requestDTO)) {
-            LogUtils.error(LOGGER, "divide upstream config error：{}", rule::toString);
+            LogUtils.error(LOGGER, "divide upstream configuration error：{}", rule::toString);
             return chain.execute(exchange);
         }
         final DivideRuleHandle ruleHandle = GsonUtils.getInstance().fromJson(rule.getHandle(), DivideRuleHandle.class);
@@ -111,21 +113,25 @@ public class WebSocketPlugin extends AbstractSoulPlugin {
                 LoadBalanceUtils.selector(upstreamList, ruleHandle.getLoadBalance(), ip);
 
         if (Objects.isNull(divideUpstream)) {
-            LogUtils.error(LOGGER, () -> "LoadBalance has error！");
-            return chain.execute(exchange);
+            LOGGER.error("websocket has no upstream");
+            Object error = SoulResultWarp.error(SoulResultEnum.CANNOT_FIND_URL.getCode(), SoulResultEnum.CANNOT_FIND_URL.getMsg(), null);
+            return SoulResultUtils.result(exchange, error);
         }
         URI wsRequestUrl = UriComponentsBuilder
                 .fromUri(URI.create(buildWsRealPath(divideUpstream, requestDTO)))
-                .scheme(Optional.ofNullable(divideUpstream.getProtocol()).orElse("ws"))
                 .build().toUri();
-
+        LOGGER.info("you websocket urlPath is :{}", wsRequestUrl.toASCIIString());
         HttpHeaders headers = exchange.getRequest().getHeaders();
         return this.webSocketService.handleRequest(exchange, new SoulWebSocketHandler(
                 wsRequestUrl, this.webSocketClient, filterHeaders(headers), buildWsProtocols(headers)));
     }
 
     private String buildWsRealPath(final DivideUpstream divideUpstream, final RequestDTO requestDTO) {
-        return divideUpstream.getProtocol() + "://" + divideUpstream.getUpstreamUrl() + requestDTO.getMethod();
+        String protocol = divideUpstream.getProtocol();
+        if (StringUtils.isEmpty(protocol)) {
+            protocol = "ws://";
+        }
+        return protocol + divideUpstream.getUpstreamUrl() + requestDTO.getMethod();
     }
 
     private List<String> buildWsProtocols(final HttpHeaders headers) {

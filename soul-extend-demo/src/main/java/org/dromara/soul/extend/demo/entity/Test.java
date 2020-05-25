@@ -33,7 +33,12 @@ public class Test {
 
     private String name;
 
-    public static void main(String[] args) {
+    /**
+     * The entry point of application.
+     *
+     * @param args the input arguments
+     */
+    public static void main(final String[] args) {
         Test test = new Test();
         test.setId("1");
         test.setName("xiaoyu");

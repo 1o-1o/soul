@@ -48,6 +48,24 @@ public interface SelectorMapper {
      */
     List<SelectorDO> selectByQuery(SelectorQuery selectorQuery);
 
+
+    /**
+     * Find by plugin id list.
+     *
+     * @param pluginId the plugin id
+     * @return the list
+     */
+    List<SelectorDO> findByPluginId(String pluginId);
+
+
+    /**
+     * select select by name.
+     *
+     * @param name the name
+     * @return selector do
+     */
+    SelectorDO selectByName(String name);
+
     /**
      * count selector by query.
      *
@@ -103,4 +121,12 @@ public interface SelectorMapper {
      * @return the int
      */
     int deleteByPluginId(String pluginId);
+
+    /**
+     * list all.
+     *
+     * @return {@linkplain List}
+     */
+    List<SelectorDO> selectAll();
+
 }
